@@ -1,1 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barçalone Döner</title>
+    <style>
+        :root {
+            --primary-red: #cc0000;
+            --dark-red: #990000;
+            --light-bg: #fff5f5;
+            --text-dark: #333;
+            --gray: #666;
+            --light-gray: #eee;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--light-bg); color: var(--text-dark); padding-bottom: 50px; }
+        
+        header {
+            background-color: var(--primary-red);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .app-icon {
+            width: 42px; height: 42px; background-color: white; color: var(--primary-red);
+            font-weight: bold; font-size: 24px; display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 18px; font-weight: 700; }
 
+        .header-controls { display: flex; gap: 8px; align-items: center; }
+        .lang-select, .admin-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .lang-select option { background: var(--primary-red); color: white; }
+        .admin-btn:hover, .lang-select:hover { background: white; color: var(--primary-red); }
+
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+
+        .tabs {
+            display: flex; background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1; padding: 12px; text-align: center; font-weight: 600; cursor: pointer;
+            color: var(--gray); background: white; border: none; transition: 0.2s;
+        }
+        .tab.active { background: var(--primary-red); color: white; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .menu-card {
+            background: white; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08); display: flex; flex-direction: column;
+        }
+        .menu-img { width: 100%; height: 180px; object-fit: cover; background: var(--light-gray); }
+        .menu-content { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .menu-info h3 { font-size: 18px; margin-bottom: 5px; color: var(--text-dark); }
+        .menu-price { font-size: 16px; font-weight: 700; color: var(--primary-red); }
+        .order-action-btn {
+            background-color: var(--primary-red); color: white; border: none;
+            padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;
+        }
+        .order-action-btn:hover { background-color: var(--dark-red); }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 20px;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 14px; width: 100%;
+            max-width: 400px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;
+        }
+        .modal-content h2 { margin-bottom: 15px; font-size: 20px; color: var(--primary-red); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--primary-red); }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-primary { background: var(--primary-red); color: white; }
+        .btn-secondary { background: var(--light-gray); color: var(--text-dark); }
+        .error-text { color: var(--primary-red); font-size: 12px; margin-top: 4px; display: none; }
+
+        .admin-section { display: none; }
+        .admin-box { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .admin-box h3 { font-size: 16px; margin-bottom: 10px; color: var(--dark-red); border-bottom: 2px solid var(--light-gray); padding-bottom: 5px; }
+        .admin-item-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--light-gray); }
+        .admin-item-info { display: flex; align-items: center; gap: 10px; }
+        .admin-item-info input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary-red); cursor: pointer; }
+        .order-card { background: #fff; border-left: 5px solid var(--primary-red); padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 14px; }
+        .order-card p { margin-bottom: 4px; }
+    </style>
+</head>
+<body id="body-tag">
+
+    <header>
+        <div class="logo-area">
+            <div class="app-icon">B</div>
+            <h1 id="app-title">BARÇALONE DÖNER</h1>
+        </div>
+        <div class="header-controls">
+            <select id="lang-selector" class="lang-select" onchange="changeLanguage(this.value)">
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="ar">🇸🇦 العربية</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+            <button class="admin-btn" id="btn-admin-nav" onclick="openAdminLogin()">Yönetici</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Müşteri Arayüzü -->
+        <div id="customer-view">
+            <div class="tabs">
+                <button class="tab active" id="tab-menu-btn" onclick="switchTab('menu')">Menü & Sipariş</button>
+                <button class="tab" id="tab-info-btn" onclick="switchTab('info')">Hakkımızda</button>
+            </div>
+            
+            <div id="tab-menu" class="menu-grid"></div>
+            
+            <div id="tab-info" style="display:none; background:white; padding:20px; border-radius:10px; text-align:center;">
+                <h3 id="info-title">Barçalone Döner Lezzetlerine Hoş Geldiniz!</h3>
+                <p id="info-desc" style="margin-top:10px; color:var(--gray);">En taze malzemeler ve özel soslarla hazırlanan enfes dönerlerimiz kapınızda.</p>
+            </div>
+        </div>
+
+        <!-- Yönetici Paneli -->
+        <div id="admin-view" class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 id="admin-panel-title" style="color:var(--primary-red);">Yönetici Paneli</h2>
+                <button class="btn btn-secondary" style="flex:unset; padding: 6px 12px;" onclick="closeAdmin()" id="admin-logout-btn">Çıkış Yap</button>
+            </div>
+
+            <div class="admin-box">
+                <h3 id="adm-add-title">Sipariş Menüsü Ekle</h3>
+                <div class="form-group">
+                    <label id="lbl-menu-name">Menü Adı</label>
+                    <input type="text" id="new-name" class="form-control" placeholder="Örn: Zurna Döner Menü">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-menu-img">Fotoğraf URL (Zorunlu)</label>
+                    <input type="text" id="new-img" class="form-control" placeholder="https://ornek.com/yemek.jpg">
+                    <div id="img-error" class="error-text">Lütfen geçerli bir yemek fotoğrafı URL'si giriniz!</div>
+                </div>
+                <div class="form-group">
+                    <label id="lbl-menu-price">Fiyat (TL)</label>
+                    <input type="number" id="new-price" class="form-control" placeholder="Örn: 180">
+                </div>
+                <button class="btn btn-primary" onclick="addMenuItem()" id="btn-add-item">Menüye Ekle</button>
+            </div>
+
+            <div class="admin-box">
+                <h3 id="adm-del-title">Sipariş Menüsü Sil</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button class="btn btn-secondary" onclick="selectAllItems(true)" id="btn-select-all">Hepsini Seç</button>
+                    <button class="btn btn-secondary" onclick="selectAllItems(false)" id="btn-deselect-all">Seçimi Kaldır</button>
+                </div>
+                <div id="admin-menu-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 10px;"></div>
+                <div class="btn-group" id="delete-action-buttons" style="display: none;">
+                    <button class="btn btn-primary" style="background:#cc0000;" onclick="deleteSelectedItems()" id="btn-delete-selected">Sil</button>
+                    <button class="btn btn-secondary" onclick="cancelSelection()" id="btn-cancel-sel">İptal</button>
+                </div>
+            </div>
+
+            <div class="admin-box">
+                <h3 id="adm-orders-title">Gelen Siparişler</h3>
+                <div id="admin-orders-list">
+                    <p style="color:var(--gray); font-size:13px;" id="no-orders-text">Henüz gelen sipariş bulunmuyor.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Şifre Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="login-modal-title">Yönetici Girişi</h2>
+            <div class="form-group">
+                <label id="login-pass-label">Yönetici Şifresi</label>
+                <input type="password" id="admin-pass" class="form-control" placeholder="Şifreyi giriniz">
+                <div id="pass-error" class="error-text">Hatalı şifre!</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="checkPassword()" id="login-btn-action">Giriş Yap</button>
+                <button class="btn btn-secondary" onclick="closeLoginModal()" id="login-btn-cancel">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sipariş Ver Modal -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="order-modal-title">Sipariş Ver</h2>
+            <input type="hidden" id="order-item-id">
+            <div class="form-group">
+                <label id="ord-qty-label">Kaç Adet?</label>
+                <input type="number" id="order-qty" class="form-control" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label id="ord-addr-label">Teslimat Adresi</label>
+                <textarea id="order-address" class="form-control" rows="3" placeholder="Sokak, Mahalle, Bina No..."></textarea>
+                <div id="address-error" class="error-text">Geçersiz adres! En az 10 karakter olmalıdır.</div>
+            </div>
+            <div class="form-group">
+                <label id="ord-note-label">Açıklama (İsteğe Bağlı)</label>
+                <input type="text" id="order-note" class="form-control" placeholder="Örn: Soslu olsun...">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="submitOrder()" id="ord-submit-btn">Sipariş Et</button>
+                <button class="btn btn-secondary" onclick="closeOrderModal()" id="ord-cancel-btn">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const translations = {
+            tr: {
+                appTitle: "BARÇALONE DÖNER",
+                adminBtn: "Yönetici",
+                tabMenu: "Menü & Sipariş",
+                tabInfo: "Hakkımızda",
+                infoTitle: "Barçalone Döner Lezzetlerine Hoş Geldiniz!",
+                infoDesc: "En taze malzemeler ve özel soslarla hazırlanan enfes dönerlerimiz kapınızda.",
+                orderBtn: "Sipariş Et",
+                adminPanelTitle: "Yönetici Paneli",
+                adminLogout: "Çıkış Yap",
+                admAddTitle: "Sipariş Menüsü Ekle",
+                lblMenuName: "Menü Adı",
+                lblMenuImg: "Fotoğraf URL (Zorunlu)",
+                lblMenuPrice: "Fiyat (TL)",
+                btnAddItem: "Menüye Ekle",
+                admDelTitle: "Sipariş Menüsü Sil",
+                btnSelectAll: "Hepsini Seç",
+                btnDeselectAll: "Seçimi Kaldır",
+                btnDelete: "Sil",
+                btnCancel: "İptal",
+                admOrdersTitle: "Gelen Siparişler",
+                noOrders: "Henüz gelen sipariş bulunmuyor.",
+                loginTitle: "Yönetici Girişi",
+                loginPassLbl: "Yönetici Şifresi",
+                passError: "Hatalı şifre!",
+                loginBtn: "Giriş Yap",
+                orderModalTitle: "Sipariş Ver",
+                qtyLbl: "Kaç Adet?",
+                addrLbl: "Teslimat Adresi",
+                noteLbl: "Açıklama (İsteğe Bağlı)",
+                submitOrderBtn: "Sipariş Et",
+                imgErr: "Lütfen geçerli bir yemek fotoğrafı URL'si giriniz! Fotoğraf zorunludur.",
+                addrErr: "Geçersiz adres! Lütfen en az 10 karakterlik detaylı bir adres giriniz.",
+                successOrder: "Siparişiniz başarıyla alındı ve yönetici paneline iletildi!",
+                successAdd: "Menü başarıyla eklendi!",
+                successDel: "Seçilen menüler silindi."
+            },
+            ar: {
+                appTitle: "برشالوني دونر",
+                adminBtn: "الإدارة",
+                tabMenu: "القائمة والطلب",
+                tabInfo: "معلومات عنا",
+                infoTitle: "أهلاً بك في مطعم برشالوني دونر!",
+                infoDesc: "أشهى أنواع الشاورما والدونر المحضرة بأطعم الصوصات وأجود اللحوم الطازجة حتى باب منزلك.",
+                orderBtn: "اطلب الآن",
+                adminPanelTitle: "لوحة تحكم المشرف",
+                adminLogout: "تسجيل خروج",
+                admAddTitle: "إضافة وجبة للقائمة",
+                lblMenuName: "اسم الوجبة",
+                lblMenuImg: "رابط الصورة (إلزامي)",
+                lblMenuPrice: "السعر (ليرة)",
+                btnAddItem: "إضافة للقائمة",
+                admDelTitle: "حذف وجبات من القائمة",
+                btnSelectAll: "تحديد الكل",
+                btnDeselectAll: "إلغاء التحديد",
+                btnDelete: "حذف",
+                btnCancel: "إلغاء",
+                admOrdersTitle: "الطلبات الواردة",
+                noOrders: "لا توجد طلبات واردة حتى الآن.",
+                loginTitle: "تسجيل دخول المشرف",
+                loginPassLbl: "كلمة مرور المشرف",
+                passError: "كلمة المرور غير صحيحة!",
+                loginBtn: "دخول",
+                orderModalTitle: "تقديم طلب",
+                qtyLbl: "الكمية؟",
+                addrLbl: "عنوان التوصيل",
+                noteLbl: "ملاحظات (اختياري)",
+                submitOrderBtn: "تأكيد الطلب",
+                imgErr: "يرجى إدخال رابط صالح لصورة الوجبة! الصورة إجبارية.",
+                addrErr: "عنوان غير صالح! يرجى إدخال 10 أحرف على الأقل بالتفصيل.",
+                successOrder: "تم استلام طلبك بنجاح وإرساله إلى لوحة تحكم المشرف!",
+                successAdd: "تمت إضافة الوجبة بنجاح!",
+                successDel: "تم حذف العناصر المحددة."
+            },
+            en: {
+                appTitle: "BARÇALONE DÖNER",
+                adminBtn: "Admin",
+                tabMenu: "Menu & Order",
+                tabInfo: "About Us",
+                infoTitle: "Welcome to Barçalone Döner!",
+                infoDesc: "Enjoy our delicious doner made with the freshest ingredients and special sauces delivered right to your door.",
+                orderBtn: "Order Now",
+                adminPanelTitle: "Admin Panel",
+                adminLogout: "Log Out",
+                admAddTitle: "Add Menu Item",
+                lblMenuName: "Menu Name",
+                lblMenuImg: "Image URL (Required)",
+                lblMenuPrice: "Price (TL)",
+                btnAddItem: "Add to Menu",
+                admDelTitle: "Delete Menu Items",
+                btnSelectAll: "Select All",
+                btnDeselectAll: "Deselect All",
+                btnDelete: "Delete",
+                btnCancel: "Cancel",
+                admOrdersTitle: "Incoming Orders",
+                noOrders: "No incoming orders yet.",
+                loginTitle: "Admin Login",
+                loginPassLbl: "Admin Password",
+                passError: "Incorrect password!",
+                loginBtn: "Login",
+                orderModalTitle: "Place Order",
+                qtyLbl: "Quantity?",
+                addrLbl: "Delivery Address",
+                noteLbl: "Note (Optional)",
+                submitOrderBtn: "Place Order",
+                imgErr: "Please enter a valid food image URL! Image is required.",
+                addrErr: "Invalid address! Please enter a detailed address of at least 10 characters.",
+                successOrder: "Your order has been successfully placed and sent to the admin panel!",
+                successAdd: "Menu item successfully added!",
+                successDel: "Selected items deleted."
+            }
+        };
+
+        let currentLang = 'tr';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+
+            if(lang === 'ar') {
+                document.getElementById('body-tag').style.direction = 'rtl';
+            } else {
+                document.getElementById('body-tag').style.direction = 'ltr';
+            }
+
+            document.getElementById('app-title').innerText = t.appTitle;
+            document.getElementById('btn-admin-nav').innerText = t.adminBtn;
+            document.getElementById('tab-menu-btn').innerText = t.tabMenu;
+            document.getElementById('tab-info-btn').innerText = t.tabInfo;
+            document.getElementById('info-title').innerText = t.infoTitle;
+            document.getElementById('info-desc').innerText = t.infoDesc;
+
+            document.getElementById('admin-panel-title').innerText = t.adminPanelTitle;
+            document.getElementById('admin-logout-btn').innerText = t.adminLogout;
+            document.getElementById('adm-add-title').innerText = t.admAddTitle;
+            document.getElementById('lbl-menu-name').innerText = t.lblMenuName;
+            document.getElementById('lbl-menu-img').innerText = t.lblMenuImg;
+            document.getElementById('lbl-menu-price').innerText = t.lblMenuPrice;
+            document.getElementById('btn-add-item').innerText = t.btnAddItem;
+
+            document.getElementById('adm-del-title').innerText = t.admDelTitle;
+            document.getElementById('btn-select-all').innerText = t.btnSelectAll;
+            document.getElementById('btn-deselect-all').innerText = t.btnDeselectAll;
+            document.getElementById('btn-delete-selected').innerText = t.btnDelete;
+            document.getElementById('btn-cancel-sel').innerText = t.btnCancel;
+
+            document.getElementById('adm-orders-title').innerText = t.admOrdersTitle;
+            document.getElementById('login-modal-title').innerText = t.loginTitle;
+            document.getElementById('login-pass-label').innerText = t.loginPassLbl;
+            document.getElementById('login-btn-action').innerText = t.loginBtn;
+            document.getElementById('login
